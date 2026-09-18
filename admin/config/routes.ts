@@ -1,0 +1,117 @@
+export default [
+  {
+    path: '/user',
+    layout: false,
+    routes: [
+      { name: '登录', path: '/user/login', component: './user/login' },
+      { name: '修改密码', path: '/user/change-password', component: './user/change-password' },
+    ],
+  },
+  {
+    path: '/workbench',
+    name: '工作台',
+    icon: 'home',
+    component: './workbench',
+  },
+  {
+    path: '/dispatch',
+    name: '派单参考',
+    icon: 'trophy',
+    access: 'canViewDispatch',
+    component: './dispatch',
+  },
+  {
+    path: '/scoring',
+    name: '评价打分',
+    icon: 'edit',
+    access: 'canEvaluate',
+    routes: [
+      { path: '/scoring', redirect: '/scoring/task' },
+      {
+        path: '/scoring/task',
+        name: '本期打分',
+        icon: 'form',
+        access: 'canEvaluate',
+        component: './scoring/task',
+      },
+      {
+        path: '/scoring/history',
+        name: '我的评价记录',
+        icon: 'history',
+        access: 'canEvaluate',
+        component: './scoring/history',
+      },
+    ],
+  },
+  {
+    path: '/cycle',
+    name: '周期管理',
+    icon: 'calendar',
+    access: 'canManageCycle',
+    routes: [
+      { path: '/cycle', redirect: '/cycle/list' },
+      {
+        path: '/cycle/list',
+        name: '周期列表',
+        icon: 'unorderedList',
+        access: 'canManageCycle',
+        component: './cycle/list',
+      },
+      {
+        path: '/cycle/progress/:periodId',
+        name: '周期进度',
+        access: 'canManageCycle',
+        hideInMenu: true,
+        component: './cycle/progress',
+      },
+    ],
+  },
+  {
+    path: '/weight',
+    name: '权重管理',
+    icon: 'lineChart',
+    access: 'canAdjustWeight',
+    routes: [
+      { path: '/weight', redirect: '/weight/adjust' },
+      {
+        path: '/weight/adjust',
+        name: '人工调权',
+        icon: 'sliders',
+        access: 'canAdjustWeight',
+        component: './weight/adjust',
+      },
+    ],
+  },
+  {
+    path: '/basic',
+    name: '基础数据',
+    icon: 'database',
+    access: 'canAdmin',
+    routes: [
+      { path: '/basic', redirect: '/basic/employee' },
+      {
+        path: '/basic/employee',
+        name: '员工档案',
+        icon: 'team',
+        access: 'canAdmin',
+        component: './basic/employee',
+      },
+      {
+        path: '/basic/tag',
+        name: '标签管理',
+        icon: 'tags',
+        access: 'canAdmin',
+        component: './basic/tag',
+      },
+      {
+        path: '/basic/relation',
+        name: '评价关系',
+        icon: 'apartment',
+        access: 'canAdmin',
+        component: './basic/relation',
+      },
+    ],
+  },
+  { path: '/', redirect: '/workbench' },
+  { path: '*', layout: false, component: './exception/404' },
+];
