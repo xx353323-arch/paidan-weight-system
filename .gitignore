@@ -31,3 +31,10 @@ logs/
 .Trashes/
 .TemporaryItems/
 .DocumentRevisions-V100/
+
+deploy-data/
+*.sqlite
+*.sqlite3
+**/*.db
+**/*.db-shm
+**/*.db-wal
