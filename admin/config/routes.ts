@@ -1,4 +1,5 @@
 export default [
+  { path: '/board', name: '派单权重榜', layout: false, component: './board' },
   {
     path: '/user',
     layout: false,

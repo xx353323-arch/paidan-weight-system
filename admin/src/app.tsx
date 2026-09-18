@@ -15,7 +15,8 @@ import { errorConfig } from './requestErrorConfig';
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
 const changePasswordPath = '/user/change-password';
-const whiteList = [loginPath, changePasswordPath];
+const publicPaths = ['/board'];
+const whiteList = [loginPath, changePasswordPath, ...publicPaths];
 
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
@@ -76,6 +77,9 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
     footerRender: () => <Footer />,
     onPageChange: () => {
       const { location } = history;
+      if (publicPaths.includes(location.pathname)) {
+        return;
+      }
       if (!initialState?.currentUser && location.pathname !== loginPath) {
         history.replace(
           `${loginPath}?redirect=${encodeURIComponent(location.pathname + location.search + location.hash)}`,
