@@ -7,8 +7,16 @@ import React from 'react';
 
 dayjs.extend(relativeTime);
 
-import { AvatarDropdown, ErrorBoundary, Footer, OfflineBanner } from '@/components';
-import { currentUser as queryCurrentUser, getToken } from '@/services/paidan/auth';
+import {
+  AvatarDropdown,
+  ErrorBoundary,
+  Footer,
+  OfflineBanner,
+} from '@/components';
+import {
+  getToken,
+  currentUser as queryCurrentUser,
+} from '@/services/paidan/auth';
 import defaultSettings from '../config/defaultSettings';
 import { errorConfig } from './requestErrorConfig';
 
@@ -32,7 +40,9 @@ export async function getInitialState(): Promise<{
       return msg.data;
     } catch (_error) {
       const { pathname, search, hash } = history.location;
-      history.replace(`${loginPath}?redirect=${encodeURIComponent(pathname + search + hash)}`);
+      history.replace(
+        `${loginPath}?redirect=${encodeURIComponent(pathname + search + hash)}`,
+      );
     }
     return undefined;
   };
@@ -55,7 +65,14 @@ export async function getInitialState(): Promise<{
 }
 
 export const layout: RunTimeLayoutConfig = ({ initialState }) => {
+  const roles = initialState?.currentUser?.roles ?? [];
+  const immersive =
+    roles.length > 0 && roles.every((role) => role === 'employee');
+
   return {
+    menuRender: immersive ? false : undefined,
+    headerRender: immersive ? false : undefined,
+    contentStyle: immersive ? { padding: 0, margin: 0 } : undefined,
     menuItemRender: (item, dom) => {
       if (item.path) {
         return (
@@ -69,12 +86,14 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
     actionsRender: () => [],
     avatarProps: {
       title: initialState?.currentUser?.name || '未登录',
-      render: (_, avatarChildren) => <AvatarDropdown>{avatarChildren}</AvatarDropdown>,
+      render: (_, avatarChildren) => (
+        <AvatarDropdown>{avatarChildren}</AvatarDropdown>
+      ),
     },
-    waterMarkProps: {
-      content: initialState?.currentUser?.name,
-    },
-    footerRender: () => <Footer />,
+    waterMarkProps: immersive
+      ? undefined
+      : { content: initialState?.currentUser?.name },
+    footerRender: immersive ? false : () => <Footer />,
     onPageChange: () => {
       const { location } = history;
       if (publicPaths.includes(location.pathname)) {

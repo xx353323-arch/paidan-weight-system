@@ -104,7 +104,7 @@ def ranking(user: CurrentUser = Depends(get_current_user), db: Session = Depends
     result_groups = []
     for name, group_rows in sorted(buckets.items(), key=lambda kv: kv[1][0]["groupSort"]):
         serialized = []
-        for row in group_rows:
+        for seat, row in enumerate(group_rows, start=1):
             is_me = row["employeeId"] == my_employee_id
             if is_me:
                 ahead = len([r for r in group_rows if not r["isFrozen"] and (r["wFinal"] or 0) > (row["wFinal"] or 0)])
@@ -121,6 +121,7 @@ def ranking(user: CurrentUser = Depends(get_current_user), db: Session = Depends
                 }
             serialized.append(
                 {
+                    "seat": seat,
                     "groupRank": row["groupRank"],
                     "wFinal": row["wFinal"],
                     "gradeCode": row["gradeCode"],

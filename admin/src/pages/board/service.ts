@@ -1,6 +1,7 @@
 import { request } from '@umijs/max';
 
 export type BoardRow = {
+  seat: number;
   groupRank: number | null;
   wFinal: number;
   gradeCode: string | null;
