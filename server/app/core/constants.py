@@ -7,6 +7,7 @@ class RoleCode(StrEnum):
     DELIVERY = "delivery"
     CS = "cs"
     HR = "hr"
+    EMPLOYEE = "employee"
 
 
 RATER_ROLES = (RoleCode.EDITOR_LEAD, RoleCode.DELIVERY, RoleCode.CS, RoleCode.HR)
@@ -17,6 +18,7 @@ ROLE_LABELS = {
     RoleCode.DELIVERY: "交付对接老师",
     RoleCode.CS: "客服主管",
     RoleCode.HR: "人事主管",
+    RoleCode.EMPLOYEE: "编辑",
 }
 
 

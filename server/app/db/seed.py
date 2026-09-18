@@ -26,6 +26,7 @@ ROLE_SEED = [
     (RoleCode.DELIVERY, True, 3),
     (RoleCode.CS, True, 4),
     (RoleCode.HR, True, 5),
+    (RoleCode.EMPLOYEE, False, 6),
 ]
 
 RATER_SEED = [
@@ -158,6 +159,12 @@ def seed_all(db: Session) -> dict:
         employee = db.scalar(select(Employee).where(Employee.emp_no == emp_no))
         if not employee:
             account = ensure_user(username, name)
+            if not db.scalar(
+                select(SysUserRole).where(
+                    SysUserRole.user_id == account.id, SysUserRole.role_code == RoleCode.EMPLOYEE
+                )
+            ):
+                db.add(SysUserRole(user_id=account.id, role_code=RoleCode.EMPLOYEE))
             employee = Employee(emp_no=emp_no, name=name, user_id=account.id, employment_status="regular")
             db.add(employee)
             db.flush()

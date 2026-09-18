@@ -7,7 +7,7 @@ from app.api import (
     employees,
     evaluation,
     periods,
-    public,
+    board,
     relations,
     tags,
     weights,
@@ -21,6 +21,6 @@ api_router.include_router(relations.router)
 api_router.include_router(periods.router)
 api_router.include_router(batch.router)
 api_router.include_router(weights.router)
-api_router.include_router(public.router)
+api_router.include_router(board.router)
 api_router.include_router(adjustments.router)
 api_router.include_router(evaluation.router)

@@ -5,18 +5,13 @@ export type BoardRow = {
   wFinal: number;
   gradeCode: string | null;
   gradeColor: string;
+  isMe: boolean;
 };
 
 export type BoardGroup = {
   groupName: string;
   total: number;
   rows: BoardRow[];
-};
-
-export type BoardData = {
-  period: { code: string; year: number; month: number } | null;
-  groups: BoardGroup[];
-  publishedAt: string | null;
 };
 
 export type MyPosition = {
@@ -28,21 +23,17 @@ export type MyPosition = {
   wFinal: number;
   gradeCode: string | null;
   gradeColor: string;
-  isFrozen: boolean;
   aheadOf: number;
-  periodCode: string;
+};
+
+export type BoardData = {
+  period: { code: string; year: number; month: number } | null;
+  groups: BoardGroup[];
+  mine: MyPosition | null;
 };
 
 export async function queryBoard() {
-  return request<{ success: boolean; data: BoardData }>('/api/public/ranking', {
+  return request<{ success: boolean; data: BoardData }>('/api/board/ranking', {
     method: 'GET',
-    skipErrorHandler: true,
   });
-}
-
-export async function lookupMine(keyword: string) {
-  return request<{ success: boolean; data: MyPosition; errorMessage?: string }>(
-    '/api/public/lookup',
-    { method: 'GET', params: { keyword }, skipErrorHandler: true },
-  );
 }

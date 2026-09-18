@@ -1,5 +1,5 @@
 declare namespace PD {
-  type RoleCode = 'admin' | 'editor_lead' | 'delivery' | 'cs' | 'hr';
+  type RoleCode = 'admin' | 'editor_lead' | 'delivery' | 'cs' | 'hr' | 'employee';
 
   type CurrentUser = {
     userid: string;

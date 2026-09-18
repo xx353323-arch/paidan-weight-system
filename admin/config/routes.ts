@@ -1,5 +1,5 @@
 export default [
-  { path: '/board', name: '派单权重榜', layout: false, component: './board' },
+  { path: '/board', name: '派单权重榜', icon: 'trophy', access: 'canViewBoard', component: './board' },
   {
     path: '/user',
     layout: false,
@@ -12,6 +12,7 @@ export default [
     path: '/workbench',
     name: '工作台',
     icon: 'home',
+    access: 'canUseWorkbench',
     component: './workbench',
   },
   {

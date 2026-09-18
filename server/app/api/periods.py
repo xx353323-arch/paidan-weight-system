@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.audit import write_audit
 from app.core.constants import ErrorCode, PeriodStatus, SubmissionStatus
-from app.core.deps import CurrentUser, get_current_user, require_admin
+from app.core.deps import CurrentUser, require_admin, require_rater
 from app.core.errors import BizError, StateConflictError
 from app.core.response import ok, page
 from app.db.session import get_db
@@ -77,7 +77,7 @@ def _serialize(db: Session, period: EvalPeriod) -> dict:
 
 
 @router.get("", summary="评价周期列表")
-def list_periods(params: PageParams = Depends(page_params), user: CurrentUser = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_periods(params: PageParams = Depends(page_params), user: CurrentUser = Depends(require_rater), db: Session = Depends(get_db)):
     total = db.scalar(select(func.count()).select_from(EvalPeriod)) or 0
     rows = db.scalars(
         select(EvalPeriod).order_by(EvalPeriod.code.desc()).offset(params.offset).limit(params.limit)
@@ -86,7 +86,7 @@ def list_periods(params: PageParams = Depends(page_params), user: CurrentUser = 
 
 
 @router.get("/current", summary="当前周期")
-def current_period(user: CurrentUser = Depends(get_current_user), db: Session = Depends(get_db)):
+def current_period(user: CurrentUser = Depends(require_rater), db: Session = Depends(get_db)):
     period = db.scalar(select(EvalPeriod).where(EvalPeriod.status == PeriodStatus.OPEN))
     if not period:
         period = db.scalar(select(EvalPeriod).order_by(EvalPeriod.code.desc()))

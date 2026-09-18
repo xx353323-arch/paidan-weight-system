@@ -15,7 +15,7 @@ import { errorConfig } from './requestErrorConfig';
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
 const changePasswordPath = '/user/change-password';
-const publicPaths = ['/board'];
+const publicPaths: string[] = [];
 const whiteList = [loginPath, changePasswordPath, ...publicPaths];
 
 export async function getInitialState(): Promise<{

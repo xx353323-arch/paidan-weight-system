@@ -1,22 +1,18 @@
-import { SearchOutlined, TrophyOutlined } from '@ant-design/icons';
-import { Helmet } from '@umijs/max';
+import { TrophyOutlined } from '@ant-design/icons';
+import { PageContainer } from '@ant-design/pro-components';
 import { useQuery } from '@tanstack/react-query';
-import { Alert, Card, Col, Empty, Input, Row, Spin, Statistic, Table, Tag, Typography } from 'antd';
+import { Alert, Card, Col, Empty, Row, Spin, Statistic, Table, Tag, Typography } from 'antd';
 import { createStyles } from 'antd-style';
-import React, { useState } from 'react';
-import { lookupMine, queryBoard } from './service';
-import type { BoardRow, MyPosition } from './service';
+import React from 'react';
+import { queryBoard } from './service';
+import type { BoardRow } from './service';
 
 const useStyles = createStyles(({ token }) => ({
-  page: {
-    minHeight: '100vh',
-    padding: '32px 16px 64px',
-    background: `linear-gradient(180deg, ${token.colorPrimaryBg} 0%, ${token.colorBgLayout} 320px)`,
+  mineCard: {
+    marginBottom: 20,
+    borderLeft: `4px solid ${token.colorPrimary}`,
+    background: token.colorPrimaryBg,
   },
-  inner: { maxWidth: 960, margin: '0 auto' },
-  title: { textAlign: 'center', marginBottom: 4 },
-  subtitle: { textAlign: 'center', display: 'block', marginBottom: 28 },
-  mineCard: { marginBottom: 24, borderLeft: `4px solid ${token.colorPrimary}` },
   groupCard: { marginBottom: 20 },
   rankCell: {
     display: 'inline-flex',
@@ -31,42 +27,19 @@ const useStyles = createStyles(({ token }) => ({
   gold: { background: '#faad14', color: '#fff' },
   silver: { background: '#bfbfbf', color: '#fff' },
   bronze: { background: '#d48806', color: '#fff' },
-  footer: { textAlign: 'center', marginTop: 32 },
+  meRow: {
+    background: token.colorPrimaryBg,
+    fontWeight: 600,
+  },
 }));
 
 const Board: React.FC = () => {
   const { styles, cx } = useStyles();
-  const [keyword, setKeyword] = useState('');
-  const [mine, setMine] = useState<MyPosition | null>(null);
-  const [lookupError, setLookupError] = useState('');
-  const [searching, setSearching] = useState(false);
-
   const { data, isLoading } = useQuery({
-    queryKey: ['public-board'],
+    queryKey: ['board-ranking'],
     queryFn: async () => (await queryBoard()).data,
     staleTime: 60 * 1000,
   });
-
-  const handleLookup = async (value: string) => {
-    const text = value.trim();
-    if (!text) return;
-    setSearching(true);
-    setLookupError('');
-    try {
-      const res = await lookupMine(text);
-      if (res.success && res.data) {
-        setMine(res.data);
-      } else {
-        setMine(null);
-        setLookupError(res.errorMessage || '没有找到这个姓名或工号');
-      }
-    } catch (error: any) {
-      setMine(null);
-      setLookupError(error?.info?.errorMessage || '查询失败，请稍后重试');
-    } finally {
-      setSearching(false);
-    }
-  };
 
   const columns = [
     {
@@ -88,6 +61,12 @@ const Board: React.FC = () => {
       ),
     },
     {
+      title: '',
+      dataIndex: 'isMe',
+      width: 80,
+      render: (isMe: boolean) => (isMe ? <Tag color="blue">我</Tag> : null),
+    },
+    {
       title: '权重分',
       dataIndex: 'wFinal',
       align: 'right' as const,
@@ -106,83 +85,70 @@ const Board: React.FC = () => {
   ];
 
   const period = data?.period;
+  const mine = data?.mine;
 
   return (
-    <div className={styles.page}>
-      <Helmet>
-        <title>本期派单权重榜</title>
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
-
-      <div className={styles.inner}>
-        <Typography.Title level={2} className={styles.title}>
+    <PageContainer
+      title={
+        <span>
           <TrophyOutlined style={{ marginRight: 8 }} />
           派单权重榜
-        </Typography.Title>
-        <Typography.Text type="secondary" className={styles.subtitle}>
-          {period ? `${period.year} 年 ${period.month} 月` : '本期结果尚未发布'}
-        </Typography.Text>
-
-        <Card className={styles.mineCard} variant="borderless">
-          <Typography.Text strong style={{ display: 'block', marginBottom: 12 }}>
-            查看我的排名
-          </Typography.Text>
-          <Input.Search
-            placeholder="输入你的姓名或工号"
-            enterButton={<SearchOutlined />}
-            size="large"
-            loading={searching}
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            onSearch={handleLookup}
-            style={{ maxWidth: 420 }}
-          />
-          {lookupError && (
-            <Alert style={{ marginTop: 12 }} type="warning" showIcon title={lookupError} />
-          )}
-          {mine && (
-            <Row gutter={24} style={{ marginTop: 20 }}>
-              <Col xs={12} sm={6}>
-                <Statistic title="姓名" value={mine.name} />
-              </Col>
-              <Col xs={12} sm={6}>
-                <Statistic
-                  title={`${mine.groupName}组名次`}
-                  value={mine.groupRank ?? '-'}
-                  suffix={`/ ${mine.groupTotal}`}
-                />
-              </Col>
-              <Col xs={12} sm={6}>
-                <Statistic title="权重分" value={mine.wFinal} precision={2} />
-              </Col>
-              <Col xs={12} sm={6}>
-                <Statistic
-                  title="档位"
-                  valueRender={() =>
-                    mine.gradeCode ? (
-                      <Tag color={mine.gradeColor} style={{ fontSize: 16, padding: '4px 12px' }}>
-                        {mine.gradeCode}
-                      </Tag>
-                    ) : (
-                      <span>-</span>
-                    )
-                  }
-                />
-              </Col>
-            </Row>
-          )}
+        </span>
+      }
+      content={period ? `${period.year} 年 ${period.month} 月` : '本期结果尚未发布'}
+    >
+      {isLoading ? (
+        <div style={{ textAlign: 'center', padding: 60 }}>
+          <Spin size="large" />
+        </div>
+      ) : !period ? (
+        <Card variant="borderless">
+          <Empty description="本期评价结果还没有发布，请稍后再来" />
         </Card>
+      ) : (
+        <>
+          {mine ? (
+            <Card className={styles.mineCard} variant="borderless" title="我的位置">
+              <Row gutter={24}>
+                <Col xs={12} sm={6}>
+                  <Statistic
+                    title={`${mine.groupName}组名次`}
+                    value={mine.groupRank ?? '-'}
+                    suffix={`/ ${mine.groupTotal}`}
+                  />
+                </Col>
+                <Col xs={12} sm={6}>
+                  <Statistic title="权重分" value={mine.wFinal} precision={2} />
+                </Col>
+                <Col xs={12} sm={6}>
+                  <Statistic
+                    title="档位"
+                    valueRender={() =>
+                      mine.gradeCode ? (
+                        <Tag color={mine.gradeColor} style={{ fontSize: 16, padding: '4px 12px' }}>
+                          {mine.gradeCode}
+                        </Tag>
+                      ) : (
+                        <span>-</span>
+                      )
+                    }
+                  />
+                </Col>
+                <Col xs={12} sm={6}>
+                  <Statistic title="领先" value={mine.aheadOf} suffix="人" />
+                </Col>
+              </Row>
+            </Card>
+          ) : (
+            <Alert
+              style={{ marginBottom: 20 }}
+              type="info"
+              showIcon
+              title="你本期没有参与评价，下面是各组的排名情况"
+            />
+          )}
 
-        {isLoading ? (
-          <div style={{ textAlign: 'center', padding: 60 }}>
-            <Spin size="large" />
-          </div>
-        ) : !period ? (
-          <Card variant="borderless">
-            <Empty description="本期评价结果还没有发布，请稍后再来" />
-          </Card>
-        ) : (
-          data?.groups.map((group) => (
+          {data?.groups.map((group) => (
             <Card
               key={group.groupName}
               className={styles.groupCard}
@@ -202,16 +168,17 @@ const Board: React.FC = () => {
                 dataSource={group.rows}
                 pagination={false}
                 size="middle"
+                rowClassName={(record) => (record.isMe ? styles.meRow : '')}
               />
             </Card>
-          ))
-        )}
+          ))}
 
-        <Typography.Text type="secondary" className={styles.footer} style={{ display: 'block' }}>
-          榜单为完全匿名展示，只有名次与分数，不显示任何姓名。查看自己的位置请在上方输入姓名或工号。
-        </Typography.Text>
-      </div>
-    </div>
+          <Typography.Text type="secondary" style={{ display: 'block', textAlign: 'center' }}>
+            榜单为匿名展示，只有名次与分数，不显示任何姓名。标记「我」的那一行是你自己。
+          </Typography.Text>
+        </>
+      )}
+    </PageContainer>
   );
 };
 

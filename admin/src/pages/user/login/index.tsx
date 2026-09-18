@@ -67,7 +67,14 @@ const Login: React.FC = () => {
         }
         message.success('登录成功');
         const params = new URL(window.location.href).searchParams;
-        window.location.href = getSafeRedirectUrl(params.get('redirect'));
+        const redirect = params.get('redirect');
+        const roles = userInfo.roles ?? [];
+        const onlyEmployee = roles.length > 0 && roles.every((r) => r === 'employee');
+        window.location.href = redirect
+          ? getSafeRedirectUrl(redirect)
+          : onlyEmployee
+            ? '/board'
+            : '/workbench';
         return;
       }
       setErrorMessage(res.errorMessage || '用户名或密码错误');

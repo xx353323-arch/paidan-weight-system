@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.core.deps import CurrentUser, get_current_user, require_admin
+from app.core.deps import CurrentUser, get_current_user, require_admin, require_rater
 from app.core.response import ok, page
 from app.db.session import get_db
 from app.schemas.employee import EmployeeBatchTag, EmployeeCreate, EmployeeStatusUpdate, EmployeeUpdate
@@ -31,7 +31,7 @@ def list_employees(
 
 
 @router.get("/employees/options", summary="在职员工下拉选项")
-def employee_options(user: CurrentUser = Depends(get_current_user), db: Session = Depends(get_db)):
+def employee_options(user: CurrentUser = Depends(require_rater), db: Session = Depends(get_db)):
     return ok(employee_service.employee_options(db))
 
 

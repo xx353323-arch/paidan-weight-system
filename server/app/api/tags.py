@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.audit import write_audit
 from app.core.constants import ErrorCode, ShowType
-from app.core.deps import CurrentUser, get_current_user, require_admin
+from app.core.deps import CurrentUser, get_current_user, require_admin, require_rater
 from app.core.errors import BizError, NotFoundError
 from app.core.response import ok
 from app.db.session import get_db
@@ -73,7 +73,7 @@ def _ensure_name_unique(db: Session, name: str, exclude_id: int | None = None) -
 
 
 @router.get("/tags", summary="标签全量列表")
-def list_tags(user: CurrentUser = Depends(get_current_user), db: Session = Depends(get_db)):
+def list_tags(user: CurrentUser = Depends(require_rater), db: Session = Depends(get_db)):
     return ok([_serialize(tag, count) for tag, count in _tag_rows(db)])
 
 

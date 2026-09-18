@@ -5,7 +5,11 @@ export default function access(initialState: { currentUser?: PD.CurrentUser } | 
   const isAdmin = has('admin');
   const isRater = has('editor_lead') || has('delivery') || has('cs') || has('hr');
 
+  const onlyEmployee = roles.length > 0 && roles.every((r) => r === 'employee');
+
   return {
+    canViewBoard: roles.length > 0,
+    canUseWorkbench: !onlyEmployee,
     canAdmin: isAdmin,
     canEvaluate: isRater,
     canViewDispatch: isAdmin || isRater,
