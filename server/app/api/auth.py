@@ -137,8 +137,12 @@ def current_user_alias(user: CurrentUser = Depends(get_current_user)):
 @router.post("/auth/password", summary="修改本人密码")
 def change_password(payload: PasswordChangeRequest, user: CurrentUser = Depends(get_current_user), db: Session = Depends(get_db)):
     record = db.get(SysUser, user.id)
-    if not record or not verify_password(payload.oldPassword, record.password_hash):
-        raise BizError("原密码不正确")
+    if not record:
+        raise NotFoundError("用户不存在")
+    first_time = record.must_change_pwd
+    if not first_time:
+        if not payload.oldPassword or not verify_password(payload.oldPassword, record.password_hash):
+            raise BizError("原密码不正确")
     problem = check_password_strength(payload.newPassword, record.username)
     if problem:
         raise BizError(problem)
@@ -156,7 +160,7 @@ def change_password(payload: PasswordChangeRequest, user: CurrentUser = Depends(
         revoked += 1
     write_audit(
         db, user, "AUTH_PASSWORD_CHANGE", "sys_user", user.id,
-        f"修改本人密码，同时吊销 {revoked} 个已有登录凭证",
+        f"{'首次登录设置密码' if first_time else '修改本人密码'}，同时吊销 {revoked} 个已有登录凭证",
     )
     db.commit()
     return ok(True)

@@ -53,7 +53,7 @@ export async function logout() {
   });
 }
 
-export async function changePassword(body: { oldPassword: string; newPassword: string }) {
+export async function changePassword(body: { oldPassword?: string; newPassword: string }) {
   return request<PD.Response<boolean>>('/api/auth/password', {
     method: 'POST',
     data: body,

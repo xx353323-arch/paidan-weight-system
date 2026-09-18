@@ -27,6 +27,7 @@ const ChangePassword: React.FC = () => {
   const { initialState, setInitialState } = useModel('@@initialState');
   const { message } = App.useApp();
   const currentUser = initialState?.currentUser;
+  const firstTime = Boolean(currentUser?.mustChangePassword);
 
   const handleSubmit = async (values: Record<string, string>) => {
     if (values.newPassword !== values.confirmPassword) {
@@ -38,14 +39,18 @@ const ChangePassword: React.FC = () => {
       return false;
     }
     try {
-      await changePassword({ oldPassword: values.oldPassword, newPassword: values.newPassword });
+      await changePassword({
+        oldPassword: firstTime ? undefined : values.oldPassword,
+        newPassword: values.newPassword,
+      });
       message.success('密码修改成功，正在进入系统');
       const userInfo = await initialState?.fetchUserInfo?.();
       if (userInfo) {
         setInitialState((s) => ({ ...s, currentUser: userInfo }));
       }
       const roles = userInfo?.roles ?? currentUser?.roles ?? [];
-      const onlyEmployee = roles.length > 0 && roles.every((r) => r === 'employee');
+      const onlyEmployee =
+        roles.length > 0 && roles.every((r) => r === 'employee');
       window.location.href = onlyEmployee ? '/board' : '/workbench';
       return true;
     } catch (error: any) {
@@ -59,12 +64,15 @@ const ChangePassword: React.FC = () => {
       <Helmet>
         <title>修改密码 - {Settings.title}</title>
       </Helmet>
-      <Card className={styles.card} title="首次登录请修改密码">
+      <Card
+        className={styles.card}
+        title={firstTime ? '设置你的密码' : '修改密码'}
+      >
         <Alert
           style={{ marginBottom: 20 }}
           type="warning"
           showIcon
-          title={`${currentUser?.name || ''} 当前使用的是初始密码，修改后才能使用系统`}
+          title={`${currentUser?.name || ''}，请设置一个新密码，设置完成后直接进入系统`}
         />
         <ProForm
           submitter={{
@@ -74,13 +82,15 @@ const ChangePassword: React.FC = () => {
           }}
           onFinish={handleSubmit}
         >
-          <ProFormText.Password
-            name="oldPassword"
-            label="当前密码"
-            fieldProps={{ size: 'large', prefix: <LockOutlined /> }}
-            placeholder="初始密码与账号相同"
-            rules={[{ required: true, message: '请输入当前密码' }]}
-          />
+          {!firstTime && (
+            <ProFormText.Password
+              name="oldPassword"
+              label="当前密码"
+              fieldProps={{ size: 'large', prefix: <LockOutlined /> }}
+              placeholder="请输入当前使用的密码"
+              rules={[{ required: true, message: '请输入当前密码' }]}
+            />
+          )}
           <ProFormText.Password
             name="newPassword"
             label="新密码"
