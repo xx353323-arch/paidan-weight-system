@@ -88,14 +88,8 @@ const Board: React.FC = () => {
       ),
     },
     {
-      title: '姓名',
-      dataIndex: 'maskedName',
-      render: (name: string) => <span style={{ letterSpacing: 1 }}>{name}</span>,
-    },
-    {
       title: '权重分',
       dataIndex: 'wFinal',
-      width: 130,
       align: 'right' as const,
       render: (value: number) => (
         <span style={{ fontSize: 16, fontWeight: 600 }}>{value?.toFixed(2)}</span>
@@ -203,7 +197,7 @@ const Board: React.FC = () => {
               }
             >
               <Table<BoardRow>
-                rowKey={(record) => `${group.groupName}-${record.groupRank}-${record.maskedName}`}
+                rowKey={(record) => `${group.groupName}-${record.groupRank}-${record.wFinal}`}
                 columns={columns}
                 dataSource={group.rows}
                 pagination={false}
@@ -214,7 +208,7 @@ const Board: React.FC = () => {
         )}
 
         <Typography.Text type="secondary" className={styles.footer} style={{ display: 'block' }}>
-          榜单仅展示名次与分数，姓名已做隐藏处理。如需查看自己的完整信息，请在上方输入姓名或工号。
+          榜单为完全匿名展示，只有名次与分数，不显示任何姓名。查看自己的位置请在上方输入姓名或工号。
         </Typography.Text>
       </div>
     </div>

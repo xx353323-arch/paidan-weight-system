@@ -16,11 +16,7 @@ LOOKUP_WINDOW = 60.0
 
 
 def mask_name(name: str) -> str:
-    if not name:
-        return ""
-    if len(name) == 1:
-        return name
-    return name[0] + "*" * (len(name) - 1)
+    return ""
 
 
 def _published_period(db: Session) -> EvalPeriod | None:
@@ -71,7 +67,6 @@ def _build_rows(db: Session, period: EvalPeriod) -> list[dict]:
                 "employeeId": employee.id,
                 "empNo": employee.emp_no,
                 "name": employee.name,
-                "maskedName": mask_name(employee.name),
                 "wFinal": snapshot.w_final,
                 "gradeCode": snapshot.grade_code,
                 "gradeColor": colors.get(snapshot.grade_code or "", "default"),
@@ -128,7 +123,6 @@ def public_ranking(db: Session = Depends(get_db)):
                 "rows": [
                     {
                         "groupRank": r["groupRank"],
-                        "maskedName": r["maskedName"],
                         "wFinal": r["wFinal"],
                         "gradeCode": r["gradeCode"],
                         "gradeColor": r["gradeColor"],

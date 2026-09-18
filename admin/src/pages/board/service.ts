@@ -2,7 +2,6 @@ import { request } from '@umijs/max';
 
 export type BoardRow = {
   groupRank: number | null;
-  maskedName: string;
   wFinal: number;
   gradeCode: string | null;
   gradeColor: string;
