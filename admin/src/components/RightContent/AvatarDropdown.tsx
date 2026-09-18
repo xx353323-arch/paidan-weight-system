@@ -1,4 +1,4 @@
-import { LogoutOutlined } from '@ant-design/icons';
+import { KeyOutlined, LogoutOutlined } from '@ant-design/icons';
 import { history, useModel } from '@umijs/max';
 import type { MenuProps } from 'antd';
 import { Spin } from 'antd';
@@ -11,6 +11,12 @@ type GlobalHeaderRightProps = {
 };
 
 const menuItems: MenuProps['items'] = [
+  {
+    key: 'password',
+    icon: <KeyOutlined />,
+    label: '修改密码',
+  },
+  { type: 'divider' as const },
   {
     key: 'logout',
     icon: <LogoutOutlined />,
@@ -31,10 +37,16 @@ const loginOut = async () => {
   }
 };
 
-export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ children }) => {
+export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
+  children,
+}) => {
   const { initialState, setInitialState } = useModel('@@initialState');
 
   const onMenuClick: MenuProps['onClick'] = (event) => {
+    if (event.key === 'password') {
+      history.push('/user/change-password');
+      return;
+    }
     if (event.key === 'logout') {
       startTransition(() => {
         setInitialState((s) => ({ ...s, currentUser: undefined }));

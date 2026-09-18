@@ -1,4 +1,4 @@
-import { LogoutOutlined, TrophyFilled } from '@ant-design/icons';
+import { KeyOutlined, LogoutOutlined, TrophyFilled } from '@ant-design/icons';
 import { history } from '@umijs/max';
 import { Dropdown } from 'antd';
 import React from 'react';
@@ -37,9 +37,15 @@ const TopBar: React.FC<Props> = ({ periodLabel, userName }) => {
       <Dropdown
         menu={{
           items: [
+            { key: 'password', icon: <KeyOutlined />, label: '修改密码' },
+            { type: 'divider' as const },
             { key: 'logout', icon: <LogoutOutlined />, label: '退出登录' },
           ],
           onClick: ({ key }) => {
+            if (key === 'password') {
+              history.push('/user/change-password');
+              return;
+            }
             if (key === 'logout') handleLogout();
           },
         }}

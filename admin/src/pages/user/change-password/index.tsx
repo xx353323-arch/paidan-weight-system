@@ -1,7 +1,7 @@
 import { LockOutlined } from '@ant-design/icons';
 import { ProForm, ProFormText } from '@ant-design/pro-components';
 import { Helmet, useModel } from '@umijs/max';
-import { Alert, App, Card } from 'antd';
+import { Alert, App, Button, Card } from 'antd';
 import { createStyles } from 'antd-style';
 import React from 'react';
 import { changePassword } from '@/services/paidan/auth';
@@ -29,6 +29,13 @@ const ChangePassword: React.FC = () => {
   const currentUser = initialState?.currentUser;
   const firstTime = Boolean(currentUser?.mustChangePassword);
 
+  const goHome = () => {
+    const roles = currentUser?.roles ?? [];
+    const onlyEmployee =
+      roles.length > 0 && roles.every((r) => r === 'employee');
+    window.location.href = onlyEmployee ? '/board' : '/workbench';
+  };
+
   const handleSubmit = async (values: Record<string, string>) => {
     if (values.newPassword !== values.confirmPassword) {
       message.error('两次输入的新密码不一致');
@@ -43,7 +50,9 @@ const ChangePassword: React.FC = () => {
         oldPassword: firstTime ? undefined : values.oldPassword,
         newPassword: values.newPassword,
       });
-      message.success('密码修改成功，正在进入系统');
+      message.success(
+        firstTime ? '密码设置成功，正在进入系统' : '密码修改成功',
+      );
       const userInfo = await initialState?.fetchUserInfo?.();
       if (userInfo) {
         setInitialState((s) => ({ ...s, currentUser: userInfo }));
@@ -109,6 +118,13 @@ const ChangePassword: React.FC = () => {
             rules={[{ required: true, message: '请再次输入新密码' }]}
           />
         </ProForm>
+        {!firstTime && (
+          <div style={{ textAlign: 'center', marginTop: 4 }}>
+            <Button type="link" onClick={goHome}>
+              返回
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );
