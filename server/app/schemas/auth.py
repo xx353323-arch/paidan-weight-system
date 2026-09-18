@@ -13,7 +13,7 @@ class RefreshRequest(BaseModel):
 
 class PasswordChangeRequest(BaseModel):
     oldPassword: str
-    newPassword: str = Field(min_length=6, max_length=64)
+    newPassword: str = Field(min_length=1, max_length=64)
 
 
 class LoginResult(BaseModel):

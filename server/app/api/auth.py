@@ -10,7 +10,13 @@ from app.core.constants import ErrorCode, RoleCode
 from app.core.deps import CurrentUser, get_current_user, require_admin
 from app.core.errors import AuthError, BizError, NotFoundError
 from app.core.response import ok
-from app.core.security import create_access_token, generate_refresh_token, hash_password, verify_password
+from app.core.security import (
+    check_password_strength,
+    create_access_token,
+    generate_refresh_token,
+    hash_password,
+    verify_password,
+)
 from app.db.base import now
 from app.db.session import get_db
 from app.models import SysRefreshToken, SysUser
@@ -53,14 +59,43 @@ def _user_payload(user: CurrentUser) -> dict:
 
 @router.post("/auth/login", summary="账号密码登录")
 def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)):
+    client_ip = request.client.host if request.client else None
     user = db.scalar(select(SysUser).where(SysUser.username == payload.username, SysUser.deleted_at.is_(None)))
+
+    if user and user.locked_until and user.locked_until > now():
+        remain = int((user.locked_until - now()).total_seconds() // 60) + 1
+        write_audit(db, None, "AUTH_LOGIN_LOCKED", "sys_user", user.id, f"{user.display_name} 在锁定期内尝试登录", ip=client_ip)
+        db.commit()
+        raise BizError(f"账号已被临时锁定，请 {remain} 分钟后再试", ErrorCode.VALIDATION)
+
     if not user or not verify_password(payload.password, user.password_hash):
+        if user:
+            user.failed_attempts += 1
+            if user.failed_attempts >= settings.max_failed_attempts:
+                user.locked_until = now() + timedelta(minutes=settings.lock_minutes)
+                user.failed_attempts = 0
+                write_audit(
+                    db, None, "AUTH_LOGIN_LOCK", "sys_user", user.id,
+                    f"{user.display_name} 连续登录失败达上限，锁定 {settings.lock_minutes} 分钟", ip=client_ip,
+                )
+                db.commit()
+                raise BizError(f"连续输错密码次数过多，账号已锁定 {settings.lock_minutes} 分钟", ErrorCode.VALIDATION)
+            remain = settings.max_failed_attempts - user.failed_attempts
+            write_audit(db, None, "AUTH_LOGIN_FAIL", "sys_user", user.id, f"{user.display_name} 密码错误", ip=client_ip)
+            db.commit()
+            raise BizError(f"用户名或密码错误，还可尝试 {remain} 次", ErrorCode.VALIDATION)
+        db.commit()
         raise BizError("用户名或密码错误", ErrorCode.VALIDATION)
+
     if user.status != "active":
         raise BizError("账号已停用，请联系管理员")
+
+    user.failed_attempts = 0
+    user.locked_until = None
     user.last_login_at = now()
+    user.last_login_ip = client_ip
     result = _issue(db, user)
-    write_audit(db, None, "AUTH_LOGIN", "sys_user", user.id, f"{user.display_name} 登录", ip=request.client.host if request.client else None)
+    write_audit(db, None, "AUTH_LOGIN", "sys_user", user.id, f"{user.display_name} 登录", ip=client_ip)
     db.commit()
     return ok(result)
 
@@ -104,6 +139,11 @@ def change_password(payload: PasswordChangeRequest, user: CurrentUser = Depends(
     record = db.get(SysUser, user.id)
     if not record or not verify_password(payload.oldPassword, record.password_hash):
         raise BizError("原密码不正确")
+    problem = check_password_strength(payload.newPassword, record.username)
+    if problem:
+        raise BizError(problem)
+    if verify_password(payload.newPassword, record.password_hash):
+        raise BizError("新密码不能与当前密码相同")
     record.password_hash = hash_password(payload.newPassword)
     record.must_change_pwd = False
     write_audit(db, user, "AUTH_PASSWORD_CHANGE", "sys_user", user.id, "修改本人密码")

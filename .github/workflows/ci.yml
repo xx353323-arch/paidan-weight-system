@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: 后端测试
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: 安装依赖
+        working-directory: server
+        run: pip install -r requirements.txt
+
+      - name: 引擎单元测试
+        working-directory: server
+        run: python -m pytest app/tests/ -q
+
+      - name: 应用可加载性检查
+        working-directory: server
+        env:
+          PAIDAN_JWT_SECRET: ci-test-secret
+          PAIDAN_DB_PATH: /tmp/ci-test.db
+        run: python -c "from app.main import app; print('routes:', len(app.routes))"
+
+  frontend:
+    name: 前端构建
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+
+      - name: 安装依赖
+        working-directory: admin
+        run: npm ci --no-audit --no-fund
+
+      - name: 类型检查
+        working-directory: admin
+        run: npx tsc --noEmit --skipLibCheck
+
+      - name: 生产构建
+        working-directory: admin
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: npm run build

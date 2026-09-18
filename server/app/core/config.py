@@ -14,12 +14,22 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_hours: int = 12
     refresh_token_days: int = 30
-    cors_origins: list[str] = ["http://localhost:8001", "http://127.0.0.1:8001"]
+    cors_origins: str = "http://localhost:8001,http://127.0.0.1:8001"
     default_password: str = "123456"
+
+    max_failed_attempts: int = 5
+    lock_minutes: int = 15
+    password_min_length: int = 8
+    require_strong_password: bool = True
+    public_facing: bool = False
 
     @property
     def database_url(self) -> str:
         return f"sqlite:///{self.db_path}"
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
 
 
 settings = Settings()

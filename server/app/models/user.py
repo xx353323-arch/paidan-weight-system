@@ -16,6 +16,9 @@ class SysUser(Base, TimestampMixin):
     status: Mapped[str] = mapped_column(String(16), default="active", nullable=False)
     must_change_pwd: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_login_ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    failed_attempts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     roles: Mapped[list["SysUserRole"]] = relationship(back_populates="user", cascade="all, delete-orphan")
