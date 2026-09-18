@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     password_min_length: int = 8
     require_strong_password: bool = True
     public_facing: bool = False
+    static_dir: str = ""
 
     @property
     def database_url(self) -> str:

@@ -146,7 +146,18 @@ def change_password(payload: PasswordChangeRequest, user: CurrentUser = Depends(
         raise BizError("新密码不能与当前密码相同")
     record.password_hash = hash_password(payload.newPassword)
     record.must_change_pwd = False
-    write_audit(db, user, "AUTH_PASSWORD_CHANGE", "sys_user", user.id, "修改本人密码")
+    revoked = 0
+    for token in db.scalars(
+        select(SysRefreshToken).where(
+            SysRefreshToken.user_id == user.id, SysRefreshToken.revoked_at.is_(None)
+        )
+    ):
+        token.revoked_at = now()
+        revoked += 1
+    write_audit(
+        db, user, "AUTH_PASSWORD_CHANGE", "sys_user", user.id,
+        f"修改本人密码，同时吊销 {revoked} 个已有登录凭证",
+    )
     db.commit()
     return ok(True)
 

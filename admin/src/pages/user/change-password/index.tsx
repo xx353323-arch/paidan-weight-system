@@ -1,10 +1,10 @@
 import { LockOutlined } from '@ant-design/icons';
 import { ProForm, ProFormText } from '@ant-design/pro-components';
-import { Helmet, history, useModel } from '@umijs/max';
+import { Helmet, useModel } from '@umijs/max';
 import { Alert, App, Card } from 'antd';
 import { createStyles } from 'antd-style';
 import React from 'react';
-import { changePassword, clearToken } from '@/services/paidan/auth';
+import { changePassword } from '@/services/paidan/auth';
 import Settings from '../../../../config/defaultSettings';
 
 const useStyles = createStyles(({ token }) => ({
@@ -39,10 +39,14 @@ const ChangePassword: React.FC = () => {
     }
     try {
       await changePassword({ oldPassword: values.oldPassword, newPassword: values.newPassword });
-      message.success('密码修改成功，请用新密码重新登录');
-      clearToken();
-      setInitialState((s) => ({ ...s, currentUser: undefined }));
-      history.replace('/user/login');
+      message.success('密码修改成功，正在进入系统');
+      const userInfo = await initialState?.fetchUserInfo?.();
+      if (userInfo) {
+        setInitialState((s) => ({ ...s, currentUser: userInfo }));
+      }
+      const roles = userInfo?.roles ?? currentUser?.roles ?? [];
+      const onlyEmployee = roles.length > 0 && roles.every((r) => r === 'employee');
+      window.location.href = onlyEmployee ? '/board' : '/workbench';
       return true;
     } catch (error: any) {
       message.error(error?.info?.errorMessage || '修改失败，请重试');
